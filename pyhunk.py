@@ -3,6 +3,7 @@ import struct
 import sys
 import os
 import string
+import array
 
 HUNK_HEADER =        0x3F3
 HUNK_UNIT =          0x3E7
@@ -13,6 +14,7 @@ HUNK_RELOC32 =       0x3EC
 HUNK_DREL32 =        0x3F7
 HUNK_SYMBOL =        0x3F0
 HUNK_END =           0x3F2
+HUNK_DEBUG =         0x3F1
 
 def read32(fp):
     raw = fp.read(4)
@@ -37,7 +39,7 @@ def blockhunk(fp):
     readData(sz * 4, fp)
 
 def bsshunk(fp):
-    print("Allocable memory = " + read32(fp))
+    print("Allocable memory = " + str(read32(fp)))
     return 0
 
 def reloc32hunk(fp):
@@ -57,38 +59,32 @@ def reloc16hunk(fp):
             if (fp.tell % 4 != 0):
                 read16(fp)
                 return 0
-        print("Number of Offsets = " + numoffs)
+        print("Number of Offsets = " + str(numoffs))
         numhunks = read16(fp)
-        print("Numbers of hunk = "+ numhunks)
+        print("Numbers of hunk = "+ str(numhunks))
         readData(numoffs * 2, fp)
 
 def symbolhunk(fp):
+    printable_chars = set(bytes(string.printable, 'ascii'))
     strsz = 0
     while ((strsz := read32(fp)) != 0):
         strsz+=1
         for i in range(0, strsz):
-            fp.read(0,ch0,1)
-            fp.read(0,ch1,1)
-            fp.read(0,ch2,1)
-            fp.read(0,ch3,1)
-            if (isprint(ch0)):
-                print("%c"% ch0)
-            else:
-                print(" ");
-            if (isprint(ch1)):
-                print("%c"% ch1)
-            else:
-                print(" ");
-            if (isprint(ch2)):
-                print("%c"% ch2)
-            else:
-                print(" ");
-            if (isprint(ch3)):
-                print("%c"% ch3)
-            else:
-                print(" ");
-        print("\n")
+            sym = fp.read(4)
+            for ch in sym:
+                # TODO: here be dragons
+                if ch in printable_chars:
+                    print(chr(ch), end = '')
+    print()
     return 0
+
+
+def debughunk(fp):
+    # does the bare minimum
+    length = read32(fp)
+    _ = read32(fp)
+    debugType = read32(fp)
+    readData((length * 4) - 8, fp)
 
 def hunkformat(tp, lwsize, fp):
     print("Position = %d" % (fp.tell() - 4))
@@ -117,6 +113,9 @@ def hunkformat(tp, lwsize, fp):
     elif (tp == HUNK_END):
         print("HUNK_END (0x%X)" % tp)
         return 1;
+    elif (tp == HUNK_DEBUG):
+        print("HUNK_DEBUG (0x%X)" % tp)
+        return debughunk(fp)
     else:
         print("UNKNOWN HUNK TYPE (0x%X)" % tp)
         fp.close()

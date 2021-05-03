@@ -5,6 +5,7 @@ import os
 import string
 import array
 
+# http://amiga-dev.wikidot.com/file-format:hunk#toc0
 HUNK_HEADER =        0x3F3
 HUNK_UNIT =          0x3E7
 HUNK_CODE =          0x3E9

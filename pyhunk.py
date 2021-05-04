@@ -3,29 +3,34 @@ import struct
 import sys
 import os
 import string
-import array
 
 # http://amiga-dev.wikidot.com/file-format:hunk#toc0
-HUNK_HEADER =        0x3F3
-HUNK_UNIT =          0x3E7
-HUNK_CODE =          0x3E9
-HUNK_DATA =          0x3EA
-HUNK_BSS =           0x3EB
-HUNK_RELOC32 =       0x3EC
-HUNK_DREL32 =        0x3F7
-HUNK_SYMBOL =        0x3F0
-HUNK_END =           0x3F2
-HUNK_DEBUG =         0x3F1
+HUNK_HEADER =        0x03F3
+HUNK_UNIT =          0x03E7
+HUNK_CODE =          0x03E9
+HUNK_DATA =          0x03EA
+HUNK_BSS =           0x03EB
+HUNK_RELOC32 =       0x03EC
+HUNK_DREL32 =        0x03F7
+HUNK_SYMBOL =        0x03F0
+HUNK_END =           0x03F2
+HUNK_DEBUG =         0x03F1
 
 def read32(fp):
     raw = fp.read(4)
-    # add checks for EOF
+    if len(raw) < 4:
+        print("read32 reached EOF unexpectedly")
+        fp.close()
+        sys.exit(2)
     return struct.unpack(">L",raw)[0]
 
 
 def read16(fp):
     raw = fp.read(2)
-    # add checks for EOF
+    if len(raw) < 2:
+        print("read16 reached EOF unexpectedly")
+        fp.close()
+        sys.exit(2)
     return struct.unpack(">L",raw)[0]
 
 
@@ -131,8 +136,11 @@ def main():
         print("Usage: %s file\n"% sys.argv[0])
         sys.exit(1);
 
-    fp = open(sys.argv[1], "rb");
-    # TODO: error handling
+    try:
+        fp = open(sys.argv[1], "rb")
+    except FileNotFoundError:
+        print("%s - file not found" % sys.argv[1])
+        sys.exit(2)
     fp.seek(0, os.SEEK_END)
     fsize = fp.tell()
     fp.seek(0, os.SEEK_SET)
@@ -146,12 +154,12 @@ def main():
         sys.exit(2)
 
     if (magic != HUNK_HEADER ):
-        print("Incorrect Hunk Magic Cookie\nExpected: %X Found %X" %( HUNK_HEADER, magic))
+        print("Incorrect Hunk Magic Cookie\nExpected: 0x%X Found 0x%X" %( HUNK_HEADER, magic))
         fp.close()
         sys.exit(1)
 
     if (string != 0):
-        print("HEADER STRING IS NOT NULL: %X"% string)
+        print("HEADER STRING IS NOT NULL: 0x%X"% string)
         fp.close()
         sys.exit(2);
 

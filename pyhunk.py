@@ -74,10 +74,9 @@ def symbolhunk(fp):
         for i in range(0, strsz):
             sym = fp.read(4)
             for ch in sym:
-                # TODO: here be dragons
                 if ch in printable_chars:
                     print(chr(ch), end = '')
-    print()
+        print()
     return 0
 
 

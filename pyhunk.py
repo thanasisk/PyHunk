@@ -34,15 +34,11 @@ def read16(fp):
     return struct.unpack(">L",raw)[0]
 
 
-def readData(numdata, fp):
-    fp.seek(numdata, os.SEEK_CUR)
-
-
 def blockhunk(fp):
     sz = read32(fp)
     # TODO: format it nicely
     print("Size in long words = " + str(sz))
-    readData(sz * 4, fp)
+    fp.seek(sz * 4, os.SEEK_CUR)
 
 def bsshunk(fp):
     print("Allocable memory = " + str(read32(fp)))
@@ -56,7 +52,7 @@ def reloc32hunk(fp):
         print("Number of Offsets = " + str(numoffs))
         numhunks = read32(fp)
         print("Numbers of hunk = " + str(numhunks))
-        readData(numoffs * 4, fp)
+        fp.seek(numoffs * 4, os.SEEK_CUR)
 
 def reloc16hunk(fp):
     while(1):
@@ -68,7 +64,7 @@ def reloc16hunk(fp):
         print("Number of Offsets = " + str(numoffs))
         numhunks = read16(fp)
         print("Numbers of hunk = "+ str(numhunks))
-        readData(numoffs * 2, fp)
+        fp.seek(numoffs * 2, os.SEEK_CUR)
 
 def symbolhunk(fp):
     printable_chars = set(bytes(string.printable, 'ascii'))
@@ -90,7 +86,7 @@ def debughunk(fp):
     length = read32(fp)
     _ = read32(fp)
     debugType = read32(fp)
-    readData((length * 4) - 8, fp)
+    fp.seek((length * 4) - 8, os.SEEK_CUR)
 
 def hunkformat(tp, lwsize, fp):
     print("Position = %d" % (fp.tell() - 4))
